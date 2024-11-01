@@ -9,15 +9,34 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:dart",
+    "workspaceContains:pubspec.yaml",
+    "workspaceContains:*/pubspec.yaml",
+    "workspaceContains:*/*/pubspec.yaml",
+    "workspaceContains:*.dart",
+    "workspaceContains:*/*.dart",
+    "workspaceContains:*/*/*.dart",
+    "onCommand:jsonschematodart.convertJsonSchema"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "jsonschematodart.helloWorld",
-        "title": "Hello World"
+        "command": "jsonschematodart.convertJsonSchema",
+        "title": "Convert JSON Schema to Dart",
+        "shortTitle": "JSON Schema to Dart"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "jsonschematodart.convertJsonSchema",
+          "group": "jsonschematodart@1",
+          "when": "explorerResourceIsFolder"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
