@@ -105,6 +105,12 @@ function generateDartClass(
       ); // Add the referenced model's filename
     } else if (itemDef.enum) {
       imports.add(`enums/${toSnakeCase(propName)}.dart`);
+    } else if (itemDef.anyOf) {
+      imports.add(
+        `${toSnakeCase(itemDef.anyOf[0].$ref.split("/").pop())}/${toSnakeCase(
+          itemDef.anyOf[0].$ref.split("/").pop()
+        )}.dart`
+      );
     }
   }
 
