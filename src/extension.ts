@@ -107,8 +107,8 @@ function generateDartClass(
   }
   classContent += `  });\n`;
 
-  // fromJson method
-  classContent += `\n  factory ${dartClassName}.fromJson(Map<String, dynamic> json) {\n`;
+  // fromMap method
+  classContent += `\n  factory ${dartClassName}.fromMap(Map<String, dynamic> json) {\n`;
   classContent += `    return ${dartClassName}(\n`;
   for (const [propName, propDef] of Object.entries(properties)) {
     const itemDef = propDef as any;
@@ -122,13 +122,13 @@ function generateDartClass(
     // Check if the type is a nested object or list of objects
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1); // Extract item type from List<>
-      classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromJson(item)).toList(),\n`;
+      classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromMap(item)).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
       // Handle nested objects
-      classContent += `      ${fieldName}: ${fieldType}.fromJson(json['${fieldName}']),\n`;
+      classContent += `      ${fieldName}: ${fieldType}.fromMap(json['${fieldName}']),\n`;
     } else {
       // Handle primitive types directly
       classContent += `      ${fieldName}: json['${fieldName}'],\n`;
@@ -136,8 +136,8 @@ function generateDartClass(
   }
   classContent += `    );\n  }\n`;
 
-  // toJson method
-  classContent += `\n  Map<String, dynamic> toJson() {\n`;
+  // toMap method
+  classContent += `\n  Map<String, dynamic> toMap() {\n`;
   classContent += `    return {\n`;
   for (const [propName, propDef] of Object.entries(properties)) {
     const fieldName = toLowerCamelCase(propName);
@@ -152,13 +152,13 @@ function generateDartClass(
     // Check if the type is a nested object or list of objects
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
-      classContent += `      '${fieldName}': ${fieldName}.map((item) => item.toJson()).toList(),\n`;
+      classContent += `      '${fieldName}': ${fieldName}.map((item) => item.toMap()).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
       // Handle nested objects
-      classContent += `      '${fieldName}': ${fieldName}.toJson(),\n`;
+      classContent += `      '${fieldName}': ${fieldName}.toMap(),\n`;
     } else {
       // Handle primitive types directly
       classContent += `      '${fieldName}': ${fieldName},\n`;
