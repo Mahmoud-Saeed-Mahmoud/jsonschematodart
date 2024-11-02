@@ -364,6 +364,11 @@ function mapJsonSchemaTypeToDart(
     return propDef.$ref
       ? toCamelCase(propDef.$ref.split("/").pop()).charAt(0).toUpperCase() +
           toCamelCase(propDef.$ref.split("/").pop()).slice(1)
+      : propDef.anyOf
+      ? toCamelCase(propDef.anyOf[0].$ref.split("/").pop())
+          .charAt(0)
+          .toUpperCase() +
+        toCamelCase(propDef.anyOf[0].$ref.split("/").pop()).slice(1)
       : "dynamic";
   }
 
