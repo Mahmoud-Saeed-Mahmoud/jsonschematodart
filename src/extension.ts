@@ -83,7 +83,9 @@ function generateDartClass(
   definition: any,
   definitions: any
 ): string {
-  const dartClassName = toCamelCase(className);
+  const dartClassName =
+    toCamelCase(className).charAt(0).toUpperCase() +
+    toCamelCase(className).slice(1);
   const properties = definition.properties || {};
 
   let imports = new Set<string>(); // Use a Set to avoid duplicate imports
@@ -329,6 +331,7 @@ function mapJsonSchemaTypeToDart(
   const typeMapping: { [key: string]: string } = {
     integer: "int",
     string: "String",
+    boolean: "bool",
     object: "Map<String, dynamic>",
   };
 
@@ -341,7 +344,13 @@ function mapJsonSchemaTypeToDart(
       // Handle array types
       if (propDef.items.$ref) {
         const referencedType = propDef.items.$ref.split("/").pop(); // Get the class name from $ref
-        dartType = `List<${toCamelCase(referencedType)}>`; // Convert to Dart list of class type
+        const UpperCamelReferencedType =
+          toCamelCase(referencedType).charAt(0).toUpperCase() +
+          toCamelCase(referencedType).slice(1); // Get the class name from $ref
+        dartType = `List<${
+          toCamelCase(referencedType).charAt(0).toUpperCase() +
+          toCamelCase(referencedType).slice(1)
+        }>`; // Convert to Dart list of class type
       }
     }
   }
@@ -353,7 +362,8 @@ function mapJsonSchemaTypeToDart(
 
   if (dartType === "dynamic") {
     return propDef.$ref
-      ? toCamelCase(propDef.$ref.split("/").pop())
+      ? toCamelCase(propDef.$ref.split("/").pop()).charAt(0).toUpperCase() +
+          toCamelCase(propDef.$ref.split("/").pop()).slice(1)
       : "dynamic";
   }
 
