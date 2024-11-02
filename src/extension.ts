@@ -124,14 +124,14 @@ function generateDartClass(
       propDef,
       definitions
     );
-    classContent += `  final ${fieldType} ${fieldName};\n`;
+    classContent += `  final ${fieldType}? ${fieldName};\n`;
   }
 
   // Constructor
   classContent += `\n  ${dartClassName}({\n`;
   for (const [propName] of Object.entries(properties)) {
     const fieldName = toLowerCamelCase(propName);
-    classContent += `    required this.${fieldName},\n`;
+    classContent += `    this.${fieldName},\n`;
   }
   classContent += `  });\n`;
 
@@ -177,14 +177,14 @@ function generateDartClass(
 
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
-      classContent += `      '${fieldName}': ${fieldName}.map((item) => item.toMap()).toList(),\n`;
+      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName}!.map((item) => item.toMap()).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
-      classContent += `      '${fieldName}': ${fieldName}.toMap(),\n`;
+      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName}!.toMap(),\n`;
     } else {
-      classContent += `      '${fieldName}': ${fieldName},\n`;
+      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName},\n`;
     }
   }
   classContent += `    };\n  }\n`;
@@ -346,10 +346,10 @@ function mapJsonSchemaTypeToDart(
     }
   }
 
-  // Check if the types include "null"
+  /*   // Check if the types include "null"
   if (types.includes("null")) {
     return `${dartType}?`; // Mark as nullable in Dart
-  }
+  } */
 
   if (dartType === "dynamic") {
     return propDef.$ref
