@@ -338,6 +338,7 @@ function mapJsonSchemaTypeToDart(
     integer: "int",
     string: "String",
     boolean: "bool",
+    number: "num",
     object: "Map<String, dynamic>",
   };
 
