@@ -193,7 +193,7 @@ function generateDartClass(
   classContent += `\n  String toJson() => jsonEncode(toMap());\n`;
 
   // jsonDecode factory method
-  classContent += `\n  factory ${dartClassName}.fromJson(String jsonStr) => ${dartClassName}.fromMap(jsonDecode(jsonStr));\n`;
+  classContent += `\n  factory ${dartClassName}.fromJson(String jsonString) => ${dartClassName}.fromMap(jsonDecode(jsonString));\n`;
 
   // toString method
   classContent += `\n  @override\n  String toString() {\n`;
