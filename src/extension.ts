@@ -249,7 +249,31 @@ function generateEnum(enumName: string, enumValues: string[]): string {
     .map((value) => `  ${convertString(value)},`)
     .join("\n");
 
-  return `${enumContent}${values}\n}\n\n`;
+  const toMap = `String toMap() {
+  return this.toString().split('.').last;
+  }`;
+  const fromMap = `factory ${dartEnumName}.fromMap(String map) {
+
+  return ${
+    enumValues
+      .map(
+        (value) =>
+          `map == '${value}' ? ${dartEnumName}.${convertString(value)} : `
+      )
+      .join("") + `${dartEnumName}.unKnown`
+  };}`;
+
+  return (
+    enumContent +
+    values +
+    "\n" +
+    "unKnown;" +
+    "\n" +
+    toMap +
+    "\n" +
+    fromMap +
+    "\n}"
+  );
 }
 
 function convertString(input: string): string {
