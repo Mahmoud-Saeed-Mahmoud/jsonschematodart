@@ -86,8 +86,34 @@ function generateDartClass(
   const dartClassName = toCamelCase(className);
   const properties = definition.properties || {};
 
-  let classContent = `import 'dart:convert';\n\n`;
-  classContent += `class ${dartClassName} {\n`;
+  let imports = new Set<string>(); // Use a Set to avoid duplicate imports
+
+  // Collect imports for nested models
+  for (const [propName, propDef] of Object.entries(properties)) {
+    const itemDef = propDef as any;
+    if (itemDef.$ref) {
+      const referencedType = itemDef.$ref.split("/").pop();
+      imports.add(
+        `${toSnakeCase(referencedType)}/${toSnakeCase(referencedType)}.dart`
+      ); // Add the referenced model's filename
+    } else if (itemDef.items && itemDef.items.$ref) {
+      const referencedType = itemDef.items.$ref.split("/").pop();
+      imports.add(
+        `${toSnakeCase(referencedType)}/${toSnakeCase(referencedType)}.dart`
+      ); // Add the referenced model's filename
+    } else if (itemDef.enum) {
+      imports.add(`enums/${toSnakeCase(propName)}.dart`);
+    }
+  }
+
+  let classContent = `import 'dart:convert';\n`;
+
+  // Add imports for referenced models
+  imports.forEach((model) => {
+    classContent += `import '../${model}';\n`; // Adjust the import path if necessary
+  });
+
+  classContent += `\nclass ${dartClassName} {\n`;
 
   // Define fields
   for (const [propName, propDef] of Object.entries(properties)) {
