@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
           fs.mkdirSync(modelsFolder);
         }
 
-        generateModels(schema, modelsFolder);
+        generateModels(folderPath, schema, modelsFolder);
         vscode.window.showInformationMessage(
           "Dart models generated successfully!"
         );
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
 }
 
-function generateModels(schema: any, outputDir: string) {
+function generateModels(folderPath: string, schema: any, outputDir: string) {
   if (!schema.definitions) {
     vscode.window.showErrorMessage("No definitions found in JSON schema.");
     return;
@@ -61,6 +61,7 @@ function generateModels(schema: any, outputDir: string) {
     const filePath = path.join(modelFolderPath, fileName);
 
     const dartClassContent = generateDartClass(
+      folderPath,
       definitionName,
       definition,
       schema.definitions
@@ -77,6 +78,7 @@ function toSnakeCase(str: string): string {
 }
 
 function generateDartClass(
+  folderPath: string,
   className: string,
   definition: any,
   definitions: any
@@ -88,7 +90,12 @@ function generateDartClass(
 
   for (const [propName, propDef] of Object.entries(properties)) {
     const fieldName = toLowerCamelCase(propName);
-    const fieldType = mapJsonSchemaTypeToDart(propName, propDef, definitions);
+    const fieldType = mapJsonSchemaTypeToDart(
+      folderPath,
+      propName,
+      propDef,
+      definitions
+    );
     classContent += `  final ${fieldType} ${fieldName};\n`;
   }
 
@@ -112,19 +119,49 @@ function generateEnum(enumName: string, enumValues: string[]): string {
     toCamelCase(enumName).slice(1);
   const enumContent = `enum ${dartEnumName} {\n`;
   const values = enumValues
-    .map((value) => `  ${toCamelCase(value)},`)
+    .map((value) => `  ${convertString(value)},`)
     .join("\n");
 
   return `${enumContent}${values}\n}\n\n`;
 }
 
+function convertString(input: string): string {
+  // Check if the string is already in camelCase
+  if (/^[a-z]+([A-Z][a-z]*)*$/.test(input)) {
+    return input; // Return as is if it's camelCase
+  }
+
+  // Split the string by underscores
+  const parts = input.split("_");
+
+  // Transform each part: lower case for the first part, capitalize others
+  const transformedParts = parts.map((part, index) => {
+    return index === 0
+      ? part.toLowerCase()
+      : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  });
+
+  // Join the parts back together
+  return transformedParts.join("");
+}
+
 function mapJsonSchemaTypeToDart(
+  folderPath: string,
   propName: string,
   propDef: any,
   definitions: any
 ): string {
   const enumType = propDef.enum;
   if (enumType) {
+    const enumFolder = path.join(folderPath, "models", "enums");
+    if (!fs.existsSync(enumFolder)) {
+      fs.mkdirSync(enumFolder);
+    }
+    fs.writeFileSync(
+      path.join(enumFolder, `${toSnakeCase(propName)}.dart`),
+      generateEnum(propName, enumType)
+    );
+
     return propDef.type === "array"
       ? "List<" +
           `${
