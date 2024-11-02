@@ -179,6 +179,28 @@ function generateDartClass(
   classContent += `  )""";\n`;
   classContent += `  }\n`;
 
+  // Equality operator
+  classContent += `\n  @override\n  bool operator ==(Object other) {\n`;
+  classContent += `    if (identical(this, other)) return true;\n`;
+  classContent += `    if (other.runtimeType != runtimeType) return false;\n`;
+  classContent += `    final ${dartClassName} typedOther = other as ${dartClassName};\n`;
+  classContent += `    return ${Object.entries(properties)
+    .map(
+      ([propName]) =>
+        `typedOther.${toLowerCamelCase(propName)} == ${toLowerCamelCase(
+          propName
+        )}`
+    )
+    .join(" &&\n      ")};\n`;
+  classContent += `  }\n`;
+
+  // hashCode method
+  classContent += `\n  @override\n  int get hashCode {\n`;
+  classContent += `    return ${Object.entries(properties)
+    .map(([propName]) => `${toLowerCamelCase(propName)}.hashCode`)
+    .join(" ^\n      ")};\n`;
+  classContent += `  }\n`;
+
   classContent += "}\n";
   return classContent;
 }
