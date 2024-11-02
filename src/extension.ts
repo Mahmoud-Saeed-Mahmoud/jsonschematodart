@@ -86,7 +86,8 @@ function generateDartClass(
   const dartClassName = toCamelCase(className);
   const properties = definition.properties || {};
 
-  let classContent = `class ${dartClassName} {\n`;
+  let classContent = `import 'dart:convert';\n\n`; // Add this line
+  classContent += `class ${dartClassName} {\n`;
 
   for (const [propName, propDef] of Object.entries(properties)) {
     const fieldName = toLowerCamelCase(propName);
@@ -121,16 +122,14 @@ function generateDartClass(
     );
     // Check if the type is a nested object or list of objects
     if (fieldType.startsWith("List<")) {
-      const itemType = fieldType.slice(5, -1); // Extract item type from List<>
+      const itemType = fieldType.slice(5, -1);
       classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromMap(item)).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
-      // Handle nested objects
       classContent += `      ${fieldName}: ${fieldType}.fromMap(json['${fieldName}']),\n`;
     } else {
-      // Handle primitive types directly
       classContent += `      ${fieldName}: json['${fieldName}'],\n`;
     }
   }
@@ -149,7 +148,6 @@ function generateDartClass(
     );
     const itemDef = propDef as any;
 
-    // Check if the type is a nested object or list of objects
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
       classContent += `      '${fieldName}': ${fieldName}.map((item) => item.toMap()).toList(),\n`;
@@ -157,14 +155,19 @@ function generateDartClass(
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
-      // Handle nested objects
       classContent += `      '${fieldName}': ${fieldName}.toMap(),\n`;
     } else {
-      // Handle primitive types directly
       classContent += `      '${fieldName}': ${fieldName},\n`;
     }
   }
   classContent += `    };\n  }\n`;
+
+  // jsonEncode method
+  classContent += `\n  String toJson() => jsonEncode(toMap());\n`;
+
+  // jsonDecode factory method
+  classContent += `\n  factory ${dartClassName}.fromJson(String jsonStr) => ${dartClassName}.fromMap(jsonDecode(jsonStr));\n`;
+
   classContent += "}\n";
   return classContent;
 }
