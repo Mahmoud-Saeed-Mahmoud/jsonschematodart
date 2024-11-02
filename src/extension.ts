@@ -86,9 +86,10 @@ function generateDartClass(
   const dartClassName = toCamelCase(className);
   const properties = definition.properties || {};
 
-  let classContent = `import 'dart:convert';\n\n`; // Add this line
+  let classContent = `import 'dart:convert';\n\n`;
   classContent += `class ${dartClassName} {\n`;
 
+  // Define fields
   for (const [propName, propDef] of Object.entries(properties)) {
     const fieldName = toLowerCamelCase(propName);
     const fieldType = mapJsonSchemaTypeToDart(
@@ -120,7 +121,7 @@ function generateDartClass(
       propDef,
       definitions
     );
-    // Check if the type is a nested object or list of objects
+    // Handle nested objects and lists
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
       classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromMap(item)).toList(),\n`;
@@ -167,6 +168,16 @@ function generateDartClass(
 
   // jsonDecode factory method
   classContent += `\n  factory ${dartClassName}.fromJson(String jsonStr) => ${dartClassName}.fromMap(jsonDecode(jsonStr));\n`;
+
+  // toString method
+  classContent += `\n  @override\n  String toString() {\n`;
+  classContent += `    return """${dartClassName}(\n`;
+  for (const [propName] of Object.entries(properties)) {
+    const fieldName = toLowerCamelCase(propName);
+    classContent += `      '${fieldName}: \$${fieldName}',\n`;
+  }
+  classContent += `  )""";\n`;
+  classContent += `  }\n`;
 
   classContent += "}\n";
   return classContent;
