@@ -99,7 +99,72 @@ function generateDartClass(
     classContent += `  final ${fieldType} ${fieldName};\n`;
   }
 
-  classContent += "\n  // Add constructor, fromJson, toJson methods here\n";
+  // Constructor
+  classContent += `\n  ${dartClassName}({\n`;
+  for (const [propName] of Object.entries(properties)) {
+    const fieldName = toLowerCamelCase(propName);
+    classContent += `    required this.${fieldName},\n`;
+  }
+  classContent += `  });\n`;
+
+  // fromJson method
+  classContent += `\n  factory ${dartClassName}.fromJson(Map<String, dynamic> json) {\n`;
+  classContent += `    return ${dartClassName}(\n`;
+  for (const [propName, propDef] of Object.entries(properties)) {
+    const itemDef = propDef as any;
+    const fieldName = toLowerCamelCase(propName);
+    const fieldType = mapJsonSchemaTypeToDart(
+      folderPath,
+      propName,
+      propDef,
+      definitions
+    );
+    // Check if the type is a nested object or list of objects
+    if (fieldType.startsWith("List<")) {
+      const itemType = fieldType.slice(5, -1); // Extract item type from List<>
+      classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromJson(item)).toList(),\n`;
+    } else if (
+      definitions[itemDef.$ref] &&
+      definitions[itemDef.$ref.split("/").pop()]
+    ) {
+      // Handle nested objects
+      classContent += `      ${fieldName}: ${fieldType}.fromJson(json['${fieldName}']),\n`;
+    } else {
+      // Handle primitive types directly
+      classContent += `      ${fieldName}: json['${fieldName}'],\n`;
+    }
+  }
+  classContent += `    );\n  }\n`;
+
+  // toJson method
+  classContent += `\n  Map<String, dynamic> toJson() {\n`;
+  classContent += `    return {\n`;
+  for (const [propName, propDef] of Object.entries(properties)) {
+    const fieldName = toLowerCamelCase(propName);
+    const fieldType = mapJsonSchemaTypeToDart(
+      folderPath,
+      propName,
+      propDef,
+      definitions
+    );
+    const itemDef = propDef as any;
+
+    // Check if the type is a nested object or list of objects
+    if (fieldType.startsWith("List<")) {
+      const itemType = fieldType.slice(5, -1);
+      classContent += `      '${fieldName}': ${fieldName}.map((item) => item.toJson()).toList(),\n`;
+    } else if (
+      definitions[itemDef.$ref] &&
+      definitions[itemDef.$ref.split("/").pop()]
+    ) {
+      // Handle nested objects
+      classContent += `      '${fieldName}': ${fieldName}.toJson(),\n`;
+    } else {
+      // Handle primitive types directly
+      classContent += `      '${fieldName}': ${fieldName},\n`;
+    }
+  }
+  classContent += `    };\n  }\n`;
   classContent += "}\n";
   return classContent;
 }
