@@ -158,14 +158,14 @@ function generateDartClass(
     // Handle nested objects and lists
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
-      classContent += `      ${fieldName}: (json['${fieldName}'] as List)\n        .map((item) => ${itemType}.fromMap(item)).toList(),\n`;
+      classContent += `      ${fieldName}: (json['${propName}'] as List)\n        .map((item) => ${itemType}.fromMap(item)).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
-      classContent += `      ${fieldName}: ${fieldType}.fromMap(json['${fieldName}']),\n`;
+      classContent += `      ${fieldName}: ${fieldType}.fromMap(json['${propName}']),\n`;
     } else {
-      classContent += `      ${fieldName}: json['${fieldName}'],\n`;
+      classContent += `      ${fieldName}: json['${propName}'],\n`;
     }
   }
   classContent += `    );\n  }\n`;
@@ -185,14 +185,14 @@ function generateDartClass(
 
     if (fieldType.startsWith("List<")) {
       const itemType = fieldType.slice(5, -1);
-      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName}!.map((item) => item.toMap()).toList(),\n`;
+      classContent += `      if (${fieldName} != null) '${propName}': ${fieldName}!.map((item) => item.toMap()).toList(),\n`;
     } else if (
       definitions[itemDef.$ref] &&
       definitions[itemDef.$ref.split("/").pop()]
     ) {
-      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName}!.toMap(),\n`;
+      classContent += `      if (${fieldName} != null) '${propName}': ${fieldName}!.toMap(),\n`;
     } else {
-      classContent += `      if (${fieldName} != null) '${fieldName}': ${fieldName},\n`;
+      classContent += `      if (${fieldName} != null) '${propName}': ${fieldName},\n`;
     }
   }
   classContent += `    };\n  }\n`;
